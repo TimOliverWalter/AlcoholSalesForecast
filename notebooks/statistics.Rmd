@@ -1,0 +1,74 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r}
+library(plotly)
+```
+
+
+```{r}
+df <- read.csv("C:\\__MeineDaten\\EthereumForecast\\data\\eth_data.csv", na.strings = c("null",".",""))
+colSums(
+  is.na(df)
+  )
+```
+```{r}
+num_cols <- subset(df, select = -c(Date))
+apply(num_cols,
+      MARGIN = 2,
+      function(x) which(
+        is.na(
+          as.numeric(
+            as.character(x)
+            )
+          )
+        )
+      )
+```
+
+
+```{r}
+fig <- plot_ly(
+  df,
+  x = ~ Date,
+  y = ~ Open,
+  name="Price",
+  type = "scatter",
+  mode = "lines",
+  line = list(
+      color = "rgba(49,130,189,1)"
+      )
+  )
+fig <- fig %>%
+  add_trace(
+    y = ~High,
+    name="Max. price",
+    line = list(
+      color = "rgba(49,130,189,0.5)"
+      )
+  )
+fig <- fig %>%
+  add_trace(
+    y = ~Low,
+    name="Min. price",
+    line = list(
+      color = "rgba(49,130,189,0.5)"
+      ) 
+  )
+fig <- fig %>%
+  layout(
+    title = "History of daily prices of Ethereum",
+    xaxis = list(type = "date"),
+    yaxis = list(type = "linear", title="Close Price in USD")
+    )
+
+fig
+```
+
+
+```{r}
+
+```
+
