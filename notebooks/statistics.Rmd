@@ -5,11 +5,16 @@ output: html_notebook
 
 ```{r}
 library(plotly)
+library(tidyverse)
+library(xts)
+library(tseries)
 ```
 
 
 ```{r}
-df <- read.csv("C:\\__MeineDaten\\EthereumForecast\\data\\eth_data.csv", na.strings = c("null",".",""))
+path <- "C:\\__MeineDaten\\EthereumForecast\\data\\eth_data.csv"
+df <- read.csv(path, na.strings = c("null",".",""))
+
 colSums(
   is.na(df)
   )
@@ -41,6 +46,7 @@ fig <- plot_ly(
       color = "rgba(49,130,189,1)"
       )
   )
+
 fig <- fig %>%
   add_trace(
     y = ~High,
@@ -49,6 +55,7 @@ fig <- fig %>%
       color = "rgba(49,130,189,0.5)"
       )
   )
+
 fig <- fig %>%
   add_trace(
     y = ~Low,
@@ -57,6 +64,7 @@ fig <- fig %>%
       color = "rgba(49,130,189,0.5)"
       ) 
   )
+
 fig <- fig %>%
   layout(
     title = "History of daily prices of Ethereum",
@@ -69,6 +77,27 @@ fig
 
 
 ```{r}
+time_series <- df %>%
+  select(
+    Date,
+    Open
+    ) %>%
+  replace_na(
+    list(
+      Date = 0,
+      Open = 0
+      )
+    )
 
+time_series <- xts(
+  time_series$Open,
+  as.Date(
+    time_series$Date,
+    format="%Y-%m-%d"
+    )
+  )
+
+adf.test(time_series)
+# time series is non-stationary
 ```
 

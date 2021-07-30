@@ -6,6 +6,7 @@ library(tidyverse)
 shinyServer(function(input, output) {
     output$forecastPlot <- renderPlotly({
         forecast <- get_forecast()
+        
         fig <- plot_ly(
             forecast,
             x = ~ ds,
@@ -22,8 +23,11 @@ shinyServer(function(input, output) {
 
 import_data <- function() {
     path <- "data\\eth_data.csv"
-    df <- read.csv(path,
-                   na.strings = c("null", ".", ""))
+    
+    df <- read.csv(
+        path,
+        na.strings = c("null", ".", "")
+        )
     df <- df %>% rename(
         ds = Date,
         y = Open,
@@ -33,6 +37,7 @@ import_data <- function() {
         adj.close = Adj.Close,
         volume = Volume
     )
+    
     return(df)
 }
 

@@ -1,0 +1,154 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r}
+library(prophet)
+library(plotly)
+library(tidyverse)
+```
+
+
+```{r}
+path <- "C:\\__MeineDaten\\EthereumForecast\\data\\eth_data.csv"
+
+df <- read.csv(path,
+               na.strings = c("null", ".", ""))
+df <- df %>% 
+  rename(
+    ds = Date,
+    y = Open,
+    high = High,
+    low = Low,
+    clsoe = Close,
+    adj.close = Adj.Close,
+    volume = Volume) %>%
+  mutate(
+    ds=as.Date(
+      ds,
+      format = "%Y-%m-%d"
+      )
+    )
+  
+df
+```
+
+
+```{r}
+train <- df[df$ds < "2021-01-01",]
+test <- df[df$ds >= "2021-01-01",]
+
+m <- prophet(
+  train,
+  yearly.seasonality = FALSE,
+  weekly.seasonality = FALSE,
+  daily.seasonality = TRUE,
+  changepoint.prior.scale = 0.5
+  )
+forecast <- predict(m, test)
+forecast <- forecast %>%
+  mutate(
+    ds=as.Date(
+      ds,
+      format = "%Y-%m-%d"
+      )
+    )
+forecast
+```
+```{r}
+# paper = https://rstudio-pubs-static.s3.amazonaws.com/351073_677a795d25d9418a843640940a2dacf5.html
+rand_search_grid =  data.frame( 
+  changepoint_prior_scale = c(0.001, 0.01, 0.1, 0.5),
+  seasonality_prior_scale = c(0.01, 0.1, 1, 10),
+  holidays_prior_scale = c(0.01, 0.1, 1, 10),
+  seasonality_mode = c("additive", "multiplicative"),
+  changepoint_range= c(0.8, 0.85, 0.9, 0.95)
+)
+
+rand_search_grid <- rand_search_grid %>% expand(
+  changepoint_prior_scale,
+  seasonality_prior_scale,
+  holidays_prior_scale,
+  seasonality_mode,
+  changepoint_range
+  )
+
+#rand_search_grid
+```
+```{r}
+for (i in 1:nrow(rand_search_grid)) {
+  parameters = rand_search_grid[i, ]
+  
+  m = prophet(train,
+              growth = 'linear',
+              seasonality.prior.scale = parameters$seasonality_prior_scale, 
+              changepoint.prior.scale = parameters$changepoint_prior_scale,
+              n.changepoints = parameters$n_changepoints,
+              weekly.seasonality = F,
+              daily.seasonality = F)
+    
+  df.cv <- cross_validation(m, initial = 730, period = 180, horizon = 365, units = 'days')
+    
+    # NOTE: There's a problem in function names with library(caret)
+    forecast = predict(m, future)
+    forecast$ds = as.Date(forecast$ds)
+    
+    #error_d = forecast::accuracy(forecast[forecast$ds %in% test$ds, 'yhat'], test$y)[ , 'MAPE']
+    error = c(error, error_d)
+  
+  mean_error = mean(error)
+  print(mean_error)
+  rand_search_grid$Value[i] = -mean_error
+}
+```
+
+
+```{r}
+forecast <- forecast %>%
+  select(
+    ds,
+    yhat
+    )
+
+df <- df %>%
+  full_join(
+    forecast,
+    by = "ds"
+    )
+```
+```{r}
+fig <- plot_ly(
+  df,
+  x = ~ ds,
+  y = ~ y,
+  name="IST",
+  type = "scatter",
+  mode = "lines",
+  line = list(
+      color = "rgba(49,130,189,1)"
+      )
+  )
+fig <- fig %>%
+  add_trace(
+    y = ~yhat,
+    name="Forecast",
+    line = list(
+      color = "rgba(230,0,0,1)"
+      )
+  )
+
+fig <- fig %>%
+  layout(
+    title = "History of daily prices of Ethereum",
+    xaxis = list(type = "date"),
+    yaxis = list(type = "linear", title="Close Price in USD")
+    )
+
+fig
+```
+```{r}
+
+```
+
+
