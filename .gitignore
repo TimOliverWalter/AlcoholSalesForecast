@@ -39,4 +39,4 @@ vignettes/*.pdf
 .Renviron
 
 # R Markdown
-.nb.html
+*.nb.html

@@ -77,30 +77,30 @@ rand_search_grid <- rand_search_grid %>% expand(
 #rand_search_grid
 ```
 ```{r}
-for (i in 1:nrow(rand_search_grid)) {
-  parameters = rand_search_grid[i, ]
-  
-  m = prophet(train,
-              growth = 'linear',
-              seasonality.prior.scale = parameters$seasonality_prior_scale, 
-              changepoint.prior.scale = parameters$changepoint_prior_scale,
-              n.changepoints = parameters$n_changepoints,
-              weekly.seasonality = F,
-              daily.seasonality = F)
-    
-  df.cv <- cross_validation(m, initial = 730, period = 180, horizon = 365, units = 'days')
-    
-    # NOTE: There's a problem in function names with library(caret)
-    forecast = predict(m, future)
-    forecast$ds = as.Date(forecast$ds)
-    
-    #error_d = forecast::accuracy(forecast[forecast$ds %in% test$ds, 'yhat'], test$y)[ , 'MAPE']
-    error = c(error, error_d)
-  
-  mean_error = mean(error)
-  print(mean_error)
-  rand_search_grid$Value[i] = -mean_error
-}
+# for (i in 1:nrow(rand_search_grid)) {
+#   parameters = rand_search_grid[i, ]
+#   
+#   m = prophet(train,
+#               growth = 'linear',
+#               seasonality.prior.scale = parameters$seasonality_prior_scale, 
+#               changepoint.prior.scale = parameters$changepoint_prior_scale,
+#               n.changepoints = parameters$n_changepoints,
+#               weekly.seasonality = F,
+#               daily.seasonality = F)
+#     
+#   df.cv <- cross_validation(m, initial = 730, period = 180, horizon = 365, units = 'days')
+#     
+#     # NOTE: There's a problem in function names with library(caret)
+#     forecast = predict(m, future)
+#     forecast$ds = as.Date(forecast$ds)
+#     
+#     #error_d = forecast::accuracy(forecast[forecast$ds %in% test$ds, 'yhat'], test$y)[ , 'MAPE']
+#     error = c(error, error_d)
+#   
+#   mean_error = mean(error)
+#   print(mean_error)
+#   rand_search_grid$Value[i] = -mean_error
+# }
 ```
 
 
