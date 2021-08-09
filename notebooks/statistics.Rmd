@@ -12,25 +12,25 @@ library(tseries)
 
 
 ```{r}
-path <- "C:\\__MeineDaten\\EthereumForecast\\data\\eth_data.csv"
-df <- read.csv(path, na.strings = c("null",".",""))
-
-colSums(
-  is.na(df)
-  )
+path <- "C:\\__MeineDaten\\EthereumForecast\\data\\Alcohol_Sales.csv"
+df <- read.csv(path, na.strings = c("null", ".", ""))
+df <- df %>%
+  mutate(Date = as.Date(Date,
+                        format = "%Y-%m-%d"))
+df
 ```
 ```{r}
-num_cols <- subset(df, select = -c(Date))
-apply(num_cols,
-      MARGIN = 2,
-      function(x) which(
-        is.na(
-          as.numeric(
-            as.character(x)
-            )
-          )
-        )
-      )
+missing_values <- apply(df,
+                        MARGIN = 2,
+                        function(x)
+                          which(is.na(x)))
+
+if (length(missing_values) == 0) {
+  print("No missing values")
+} else {
+  print("Indexes missing values")
+  print(missing_values)
+}
 ```
 
 
@@ -38,39 +38,20 @@ apply(num_cols,
 fig <- plot_ly(
   df,
   x = ~ Date,
-  y = ~ Open,
-  name="Price",
+  y = ~ Sale,
+  name = "Sales",
   type = "scatter",
   mode = "lines",
-  line = list(
-      color = "rgba(49,130,189,1)"
-      )
-  )
-
-fig <- fig %>%
-  add_trace(
-    y = ~High,
-    name="Max. price",
-    line = list(
-      color = "rgba(49,130,189,0.5)"
-      )
-  )
-
-fig <- fig %>%
-  add_trace(
-    y = ~Low,
-    name="Min. price",
-    line = list(
-      color = "rgba(49,130,189,0.5)"
-      ) 
-  )
+  line = list(color = "rgba(49,130,189,1)")
+)
 
 fig <- fig %>%
   layout(
-    title = "History of daily prices of Ethereum",
+    title = "Close Price",
     xaxis = list(type = "date"),
-    yaxis = list(type = "linear", title="Close Price in USD")
-    )
+    yaxis = list(type = "linear",
+                 title = "Close Price")
+  )
 
 fig
 ```
@@ -78,26 +59,15 @@ fig
 
 ```{r}
 time_series <- df %>%
-  select(
-    Date,
-    Open
-    ) %>%
-  replace_na(
-    list(
-      Date = 0,
-      Open = 0
-      )
-    )
+  select(Date,
+         Sale)
 
-time_series <- xts(
-  time_series$Open,
-  as.Date(
-    time_series$Date,
-    format="%Y-%m-%d"
-    )
-  )
+time_series <- xts(time_series$Sale,
+                   as.Date(time_series$Date,
+                           format = "%Y-%m-%d"))
 
-adf.test(time_series)
-# time series is non-stationary
+adft <- adf.test(time_series, k = 14)
+print(paste("p-value:", adft$p.value))
+print("Data has a unit root, it is a non-stationary")
 ```
 

@@ -7,63 +7,38 @@ output: html_notebook
 library(prophet)
 library(plotly)
 library(tidyverse)
+library(Metrics)
 ```
 
 
 ```{r}
-path <- "C:\\__MeineDaten\\EthereumForecast\\data\\eth_data.csv"
+path <- "C:\\__MeineDaten\\EthereumForecast\\data\\Alcohol_Sales.csv"
 
 df <- read.csv(path,
                na.strings = c("null", ".", ""))
-df <- df %>% 
-  rename(
-    ds = Date,
-    y = Open,
-    high = High,
-    low = Low,
-    clsoe = Close,
-    adj.close = Adj.Close,
-    volume = Volume) %>%
-  mutate(
-    ds=as.Date(
-      ds,
-      format = "%Y-%m-%d"
-      )
-    )
-  
+df <- df %>%
+  rename(ds = Date,
+         y = Sale) %>%
+  mutate(ds = as.Date(ds,
+                      format = "%Y-%m-%d"))
+
 df
 ```
 
 
 ```{r}
-train <- df[df$ds < "2021-01-01",]
-test <- df[df$ds >= "2021-01-01",]
-
-m <- prophet(
-  train,
-  yearly.seasonality = FALSE,
-  weekly.seasonality = FALSE,
-  daily.seasonality = TRUE,
-  changepoint.prior.scale = 0.5
-  )
-forecast <- predict(m, test)
-forecast <- forecast %>%
-  mutate(
-    ds=as.Date(
-      ds,
-      format = "%Y-%m-%d"
-      )
-    )
-forecast
+split_date <- "2017-12-01"
+train <- df[df$ds <= split_date, ]
+test <- df[df$ds > split_date, ]
+test
 ```
 ```{r}
-# paper = https://rstudio-pubs-static.s3.amazonaws.com/351073_677a795d25d9418a843640940a2dacf5.html
-rand_search_grid =  data.frame( 
+rand_search_grid =  data.frame(
   changepoint_prior_scale = c(0.001, 0.01, 0.1, 0.5),
   seasonality_prior_scale = c(0.01, 0.1, 1, 10),
   holidays_prior_scale = c(0.01, 0.1, 1, 10),
   seasonality_mode = c("additive", "multiplicative"),
-  changepoint_range= c(0.8, 0.85, 0.9, 0.95)
+  changepoint_range = c(0.8, 0.85, 0.9, 0.95)
 )
 
 rand_search_grid <- rand_search_grid %>% expand(
@@ -72,83 +47,122 @@ rand_search_grid <- rand_search_grid %>% expand(
   holidays_prior_scale,
   seasonality_mode,
   changepoint_range
+)
+
+rand_search_grid
+```
+```{r}
+tuning_result <- rand_search_grid
+cutoffs <-  seq.Date(
+  from = as.Date("2016-11-01"),
+  to = as.Date("2017-10-01"),
+  by = "month"
+)
+
+for (i in 1:nrow(rand_search_grid)) {
+  parameters = rand_search_grid[i,]
+  
+  m = prophet(
+    df = train,
+    yearly.seasonality = TRUE,
+    weekly.seasonality = FALSE,
+    daily.seasonality = FALSE,
+    changepoint.prior.scale = parameters$changepoint_prior_scale,
+    seasonality.prior.scale = parameters$seasonality_prior_scale,
+    holidays.prior.scale = parameters$holidays_prior_scale,
+    seasonality.mode = parameters$seasonality_mode,
+    changepoint.range = parameters$changepoint_range
   )
-
-#rand_search_grid
-```
-```{r}
-# for (i in 1:nrow(rand_search_grid)) {
-#   parameters = rand_search_grid[i, ]
-#   
-#   m = prophet(train,
-#               growth = 'linear',
-#               seasonality.prior.scale = parameters$seasonality_prior_scale, 
-#               changepoint.prior.scale = parameters$changepoint_prior_scale,
-#               n.changepoints = parameters$n_changepoints,
-#               weekly.seasonality = F,
-#               daily.seasonality = F)
-#     
-#   df.cv <- cross_validation(m, initial = 730, period = 180, horizon = 365, units = 'days')
-#     
-#     # NOTE: There's a problem in function names with library(caret)
-#     forecast = predict(m, future)
-#     forecast$ds = as.Date(forecast$ds)
-#     
-#     #error_d = forecast::accuracy(forecast[forecast$ds %in% test$ds, 'yhat'], test$y)[ , 'MAPE']
-#     error = c(error, error_d)
-#   
-#   mean_error = mean(error)
-#   print(mean_error)
-#   rand_search_grid$Value[i] = -mean_error
-# }
+  
+  df_cv <- cross_validation(m,
+                            cutoffs = cutoffs,
+                            horizon = 32,
+                            units = "days")
+  
+  mean_squared_error <- mse(actual = df_cv$y,
+                            predicted = df_cv$yhat)
+  
+  mean_absolute_error <- mae(actual = df_cv$y,
+                             predicted = df_cv$yhat)
+  
+  mean_absolute_percent_error <- mape(actual = df_cv$y,
+                                      predicted = df_cv$yhat)
+  
+  tuning_result[i, "mse"] <- mean_squared_error
+  tuning_result[i, "mae"] <- mean_absolute_error
+  tuning_result[i, "mape"] <- mean_absolute_percent_error
+}
+write.csv(tuning_result,
+          "tuning_result.csv")
+tuning_result
 ```
 
 
 ```{r}
-forecast <- forecast %>%
-  select(
-    ds,
-    yhat
-    )
+index <- tuning_result %>%
+  select(mse,
+         mae,
+         mape) %>%
+  apply(MARGIN = 2,
+        which.min)
 
-df <- df %>%
-  full_join(
-    forecast,
-    by = "ds"
-    )
+print(tuning_result[index[1], ])
+print(tuning_result[index[2], ])
+print(tuning_result[index[3], ])
+```
+
+
+```{r}
+m <- prophet(
+  train,
+  yearly.seasonality = TRUE,
+  weekly.seasonality = FALSE,
+  daily.seasonality = FALSE,
+  changepoint.prior.scale = 0.5,
+  seasonality.prior.scale = 0.1,
+  holidays.prior.scale = 0.01,
+  seasonality.mode = "multiplicative",
+  changepoint.range = 0.01
+)
+
+pred <- predict(m, test)
+pred <- pred %>%
+  mutate(ds = as.Date(ds,
+                      format = "%Y-%m-%d")) %>%
+  select(ds,
+         yhat)
+
+forecast <- df %>%
+  full_join(pred,
+            by = "ds")
+
+tail(forecast)
 ```
 ```{r}
 fig <- plot_ly(
-  df,
+  forecast,
   x = ~ ds,
   y = ~ y,
-  name="IST",
+  name = "Actual",
   type = "scatter",
   mode = "lines",
-  line = list(
-      color = "rgba(49,130,189,1)"
-      )
-  )
+  line = list(color = "rgba(49,130,189,1)")
+)
 fig <- fig %>%
   add_trace(
-    y = ~yhat,
-    name="Forecast",
-    line = list(
-      color = "rgba(230,0,0,1)"
-      )
+    y = ~ yhat,
+    name = "Forecast",
+    line = list(color = "rgba(230,0,0,1)")
   )
 
 fig <- fig %>%
   layout(
-    title = "History of daily prices of Ethereum",
-    xaxis = list(type = "date"),
-    yaxis = list(type = "linear", title="Close Price in USD")
-    )
+    title = "Close Price",
+    xaxis = list(type = "date", title = "Date"),
+    yaxis = list(type = "linear", title = "Close Price")
+  )
 
 fig
-```
-```{r}
-
 ```
 
 
