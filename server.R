@@ -10,41 +10,73 @@ shinyServer(function(input, output) {
         fig <- plot_ly(
             forecast,
             x = ~ ds,
-            y = ~ yhat,
+            y = ~ y,
             name = "Price",
             type = "scatter",
             mode = "lines",
             line = list(color = "rgba(49,130,189,1)")
         )
         
+        fig <- fig %>%
+            add_trace(
+                y = ~ yhat,
+                name = "Forecast",
+                line = list(color = "rgba(230,0,0,1)")
+            )
+        
+        fig <- fig %>%
+            layout(
+                title = "Close Price",
+                xaxis = list(type = "date", title = "Date"),
+                yaxis = list(type = "linear", title = "Close Price")
+            )
+        
     })
     
 })
 
 import_data <- function() {
-    path <- "data\\eth_data.csv"
+    path <- "data\\Alcohol_Sales.csv"
     
-    df <- read.csv(
-        path,
-        na.strings = c("null", ".", "")
-        )
-    df <- df %>% rename(
-        ds = Date,
-        y = Open,
-        high = High,
-        low = Low,
-        clsoe = Close,
-        adj.close = Adj.Close,
-        volume = Volume
-    )
+    df <- read.csv(path,
+                   na.strings = c("null", ".", ""))
+    df <- df %>% rename(ds = Date,
+                        y = Sale) %>%
+        mutate(ds = as.Date(ds,
+                            format = "%Y-%m-%d"))
     
     return(df)
 }
 
 get_forecast <- function() {
     df <- import_data()
-    m <- prophet(df)
-    future <- make_future_dataframe(m, periods = 365)
-    forecast <- predict(m, future)
+    
+    split_date <- "2017-12-01"
+    train <- df[df$ds <= split_date,]
+    test <- df[df$ds > split_date,]
+    
+    m <- prophet(
+        train,
+        yearly.seasonality = TRUE,
+        weekly.seasonality = FALSE,
+        daily.seasonality = FALSE,
+        changepoint.prior.scale = 0.5,
+        seasonality.prior.scale = 0.1,
+        holidays.prior.scale = 0.01,
+        seasonality.mode = "multiplicative",
+        changepoint.range = 0.01
+    )
+    
+    pred <- predict(m, test)
+    pred <- pred %>%
+        mutate(ds = as.Date(ds,
+                            format = "%Y-%m-%d")) %>%
+        select(ds,
+               yhat)
+    
+    forecast <- df %>%
+        full_join(pred,
+                  by = "ds")
+    
     return(forecast)
 }
