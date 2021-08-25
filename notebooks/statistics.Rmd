@@ -1,11 +1,11 @@
 ---
-title: "R Notebook"
+title: "Statistics"
 output: html_notebook
 ---
 
 ```{r}
 library(plotly)
-library(tidyverse)
+library(dplyr)
 library(xts)
 library(tseries)
 ```
@@ -15,8 +15,7 @@ library(tseries)
 path <- "C:\\__MeineDaten\\EthereumForecast\\data\\Alcohol_Sales.csv"
 df <- read.csv(path, na.strings = c("null", ".", ""))
 df <- df %>%
-  mutate(Date = as.Date(Date,
-                        format = "%Y-%m-%d"))
+  mutate(Date = as.Date(Date, format = "%Y-%m-%d"))
 df
 ```
 ```{r}
@@ -47,10 +46,10 @@ fig <- plot_ly(
 
 fig <- fig %>%
   layout(
-    title = "Close Price",
+    title = "Alcohol Sales form Jan 1992 to Jan 2019",
     xaxis = list(type = "date"),
     yaxis = list(type = "linear",
-                 title = "Close Price")
+                 title = "Sale")
   )
 
 fig
@@ -68,6 +67,6 @@ time_series <- xts(time_series$Sale,
 
 adft <- adf.test(time_series, k = 14)
 print(paste("p-value:", adft$p.value))
-print("Data has a unit root, it is a non-stationary")
 ```
+Data has a unit root, it is a non-stationary.
 

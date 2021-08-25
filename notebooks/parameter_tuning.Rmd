@@ -1,5 +1,5 @@
 ---
-title: "R Notebook"
+title: "Hyperparameter tuning"
 output: html_notebook
 ---
 
@@ -29,8 +29,7 @@ df
 ```{r}
 split_date <- "2017-12-01"
 train <- df[df$ds <= split_date, ]
-test <- df[df$ds > split_date, ]
-test
+train
 ```
 ```{r}
 rand_search_grid =  data.frame(
@@ -95,74 +94,6 @@ for (i in 1:nrow(rand_search_grid)) {
 write.csv(tuning_result,
           "tuning_result.csv")
 tuning_result
-```
-
-
-```{r}
-index <- tuning_result %>%
-  select(mse,
-         mae,
-         mape) %>%
-  apply(MARGIN = 2,
-        which.min)
-
-print(tuning_result[index[1], ])
-print(tuning_result[index[2], ])
-print(tuning_result[index[3], ])
-```
-
-
-```{r}
-m <- prophet(
-  train,
-  yearly.seasonality = TRUE,
-  weekly.seasonality = FALSE,
-  daily.seasonality = FALSE,
-  changepoint.prior.scale = 0.5,
-  seasonality.prior.scale = 0.1,
-  holidays.prior.scale = 0.01,
-  seasonality.mode = "multiplicative",
-  changepoint.range = 0.01
-)
-
-pred <- predict(m, test)
-pred <- pred %>%
-  mutate(ds = as.Date(ds,
-                      format = "%Y-%m-%d")) %>%
-  select(ds,
-         yhat)
-
-forecast <- df %>%
-  full_join(pred,
-            by = "ds")
-
-tail(forecast)
-```
-```{r}
-fig <- plot_ly(
-  forecast,
-  x = ~ ds,
-  y = ~ y,
-  name = "Actual",
-  type = "scatter",
-  mode = "lines",
-  line = list(color = "rgba(49,130,189,1)")
-)
-fig <- fig %>%
-  add_trace(
-    y = ~ yhat,
-    name = "Forecast",
-    line = list(color = "rgba(230,0,0,1)")
-  )
-
-fig <- fig %>%
-  layout(
-    title = "Close Price",
-    xaxis = list(type = "date", title = "Date"),
-    yaxis = list(type = "linear", title = "Close Price")
-  )
-
-fig
 ```
 
 

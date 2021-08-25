@@ -64,7 +64,7 @@ get_forecast <- function() {
         seasonality.prior.scale = 0.1,
         holidays.prior.scale = 0.01,
         seasonality.mode = "multiplicative",
-        changepoint.range = 0.01
+        changepoint.range = 0.8
     )
     
     pred <- predict(m, test)
@@ -72,7 +72,9 @@ get_forecast <- function() {
         mutate(ds = as.Date(ds,
                             format = "%Y-%m-%d")) %>%
         select(ds,
-               yhat)
+               yhat,
+               yhat_upper,
+               yhat_lower)
     
     forecast <- df %>%
         full_join(pred,
