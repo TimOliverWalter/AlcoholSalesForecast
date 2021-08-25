@@ -8,11 +8,12 @@ library(dplyr)
 ```
 ```{r}
 path <- "C:\\__MeineDaten\\EthereumForecast\\data\\tuning_result.csv"
+
 tuning_result <- read.csv(path)
 tuning_result
 ```
 ```{r}
-path <- "C:\\__MeineDaten\\EthereumForecast\\data\\Alcohol_Sales.csv"
+path <- "C:\\__MeineDaten\\EthereumForecast\\data\\alcohol_sales.csv"
 
 df <- read.csv(path,
                na.strings = c("null", ".", ""))
@@ -26,8 +27,9 @@ df
 ```
 ```{r}
 split_date <- "2017-12-01"
-train <- df[df$ds <= split_date, ]
-test <- df[df$ds > split_date, ]
+train <- df[df$ds <= split_date,]
+test <- df[df$ds > split_date,]
+
 test
 ```
 ```{r}
@@ -39,8 +41,9 @@ index <- tuning_result %>%
         which.min) %>%
   unique()
 
-best_parameters <- tuning_result[index,]
+best_parameters <- tuning_result[index, ]
 row.names(best_parameters) <- NULL
+
 best_parameters
 ```
 
@@ -52,11 +55,11 @@ m <- prophet(
   yearly.seasonality = TRUE,
   weekly.seasonality = FALSE,
   daily.seasonality = FALSE,
-  changepoint.prior.scale = best_parameters[1,]$changepoint_prior_scale,
-  seasonality.prior.scale = best_parameters[1,]$seasonality_prior_scale,
-  holidays.prior.scale = best_parameters[1,]$holidays_prior_scale,
-  seasonality.mode = best_parameters[1,]$seasonality_mode,
-  changepoint.range = best_parameters[1,]$changepoint_range
+  changepoint.prior.scale = best_parameters[1, ]$changepoint_prior_scale,
+  seasonality.prior.scale = best_parameters[1, ]$seasonality_prior_scale,
+  holidays.prior.scale = best_parameters[1, ]$holidays_prior_scale,
+  seasonality.mode = best_parameters[1, ]$seasonality_mode,
+  changepoint.range = best_parameters[1, ]$changepoint_range
 )
 
 pred <- predict(m, test)

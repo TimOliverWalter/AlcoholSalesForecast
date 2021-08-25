@@ -6,7 +6,7 @@ output: html_notebook
 ```{r}
 library(prophet)
 library(plotly)
-library(tidyverse)
+library(dplyr)
 library(Metrics)
 ```
 
@@ -28,7 +28,7 @@ df
 
 ```{r}
 split_date <- "2017-12-01"
-train <- df[df$ds <= split_date, ]
+train <- df[df$ds <= split_date,]
 train
 ```
 ```{r}
@@ -59,7 +59,7 @@ cutoffs <-  seq.Date(
 )
 
 for (i in 1:nrow(rand_search_grid)) {
-  parameters = rand_search_grid[i,]
+  parameters = rand_search_grid[i, ]
   
   m = prophet(
     df = train,
@@ -91,9 +91,11 @@ for (i in 1:nrow(rand_search_grid)) {
   tuning_result[i, "mae"] <- mean_absolute_error
   tuning_result[i, "mape"] <- mean_absolute_percent_error
 }
-write.csv(tuning_result,
-          "C:\\__MeineDaten\\EthereumForecast\\data\\tuning_result.csv",
-          row.names = FALSE)
+write.csv(
+  tuning_result,
+  "C:\\__MeineDaten\\EthereumForecast\\data\\tuning_result.csv",
+  row.names = FALSE
+)
 tuning_result
 ```
 

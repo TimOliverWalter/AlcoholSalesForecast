@@ -13,6 +13,7 @@ library(tseries)
 
 ```{r}
 path <- "C:\\__MeineDaten\\EthereumForecast\\data\\alcohol_sales.csv"
+
 df <- read.csv(path, na.strings = c("null", ".", ""))
 df <- df %>%
   mutate(Date = as.Date(Date, format = "%Y-%m-%d"))
