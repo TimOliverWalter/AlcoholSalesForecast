@@ -12,7 +12,7 @@ library(Metrics)
 
 
 ```{r}
-path <- "C:\\__MeineDaten\\EthereumForecast\\data\\Alcohol_Sales.csv"
+path <- "C:\\__MeineDaten\\EthereumForecast\\data\\alcohol_sales.csv"
 
 df <- read.csv(path,
                na.strings = c("null", ".", ""))
@@ -92,7 +92,8 @@ for (i in 1:nrow(rand_search_grid)) {
   tuning_result[i, "mape"] <- mean_absolute_percent_error
 }
 write.csv(tuning_result,
-          "tuning_result.csv")
+          "C:\\__MeineDaten\\EthereumForecast\\data\\tuning_result.csv",
+          row.names = FALSE)
 tuning_result
 ```
 

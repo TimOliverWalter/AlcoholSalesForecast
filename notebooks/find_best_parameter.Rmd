@@ -7,7 +7,7 @@ output: html_notebook
 library(dplyr)
 ```
 ```{r}
-path <- "C:\\__MeineDaten\\EthereumForecast\\notebooks\\tuning_result.csv"
+path <- "C:\\__MeineDaten\\EthereumForecast\\data\\tuning_result.csv"
 tuning_result <- read.csv(path)
 tuning_result
 ```

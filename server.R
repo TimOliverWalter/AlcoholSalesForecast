@@ -1,7 +1,7 @@
 library(shiny)
 library(plotly)
 library(prophet)
-library(tidyverse)
+library(dplyr)
 
 shinyServer(function(input, output) {
     output$forecastPlot <- renderPlotly({
