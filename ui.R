@@ -1,10 +1,8 @@
 library(shiny)
-library(shinythemes)
 library(plotly)
 library(DT)
 
 shinyUI(fluidPage(
-  theme = shinytheme("superhero"),
   titlePanel("Forecasting Alcohol Sales"),
   sidebarLayout(
     sidebarPanel(
@@ -25,10 +23,7 @@ shinyUI(fluidPage(
         timeFormat = "%Y-%m-%d"
       )
     ),
-    mainPanel(
-      plotlyOutput("plot"),
-      DT::dataTableOutput("table")
-      )
+    mainPanel(plotlyOutput("plot"),
+              DT::dataTableOutput("table"))
   )
 ))
-

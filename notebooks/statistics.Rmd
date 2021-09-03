@@ -7,18 +7,20 @@ output: html_notebook
 library(plotly)
 library(dplyr)
 library(xts)
+library(zoo)
 library(tseries)
 ```
 
-
 ```{r}
-path <- "C:\\__MeineDaten\\EthereumForecast\\data\\alcohol_sales.csv"
+path <- "../data/alcohol_sales.csv"
 
 df <- read.csv(path, na.strings = c("null", ".", ""))
 df <- df %>%
   mutate(Date = as.Date(Date, format = "%Y-%m-%d"))
+
 df
 ```
+
 ```{r}
 missing_values <- apply(df,
                         MARGIN = 2,
@@ -33,41 +35,66 @@ if (length(missing_values) == 0) {
 }
 ```
 
+```{r}
+rsd <- rollapply(df$Sale,
+                 width = 12,
+                 FUN = sd,
+                 fill = NA)
+
+rmean <- rollapply(df$Sale,
+                   width = 12,
+                   FUN = mean,
+                   fill = NA)
+```
 
 ```{r}
 fig <- plot_ly(
   df,
   x = ~ Date,
   y = ~ Sale,
-  name = "Sales",
+  name = "Actual",
   type = "scatter",
   mode = "lines",
   line = list(color = "rgba(49,130,189,1)")
 )
+fig <- fig %>%
+  add_trace(
+    y = rmean,
+    name = "Rolling Mean",
+    line = list(color = "rgba(230,0,0,1)")
+  )
+fig <- fig %>%
+  add_trace(
+    y = rsd,
+    name = "Rolling Variance",
+    line = list(color = "rgba(0,230,0,1)")
+  )
 
 fig <- fig %>%
-  layout(
-    title = "Alcohol Sales form Jan 1992 to Jan 2019",
-    xaxis = list(type = "date"),
-    yaxis = list(type = "linear",
-                 title = "Sale")
-  )
+  layout(title = "Alcohol Sales form Jan 1992 to Jan 2019")
 
 fig
 ```
-
+As seen from the above plot, the standard deviation is not varying much so there is not much variance.
 
 ```{r}
-time_series <- df %>%
-  select(Date,
-         Sale)
+ts <- xts(df$Sale,
+          as.Date(df$Date,
+                  format = "%Y-%m-%d"))
 
-time_series <- xts(time_series$Sale,
-                   as.Date(time_series$Date,
-                           format = "%Y-%m-%d"))
+adft <- adf.test(ts, k = 12)
 
-adft <- adf.test(time_series, k = 14)
-print(paste("p-value:", adft$p.value))
+if (adft$p.value <= 0.05) {
+  print("Reject null hypothesis, data is stationary")
+  print(paste("p-value:", adft$p.value))
+} else {
+  print("Do not reject null hypothesis, data is not stationary")
+  print(paste("p-value:", adft$p.value))
+}
 ```
-Data has a unit root, it is a non-stationary.
+
+
+
+
+
 

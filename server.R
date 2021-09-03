@@ -18,13 +18,27 @@ shinyServer(function(input, output) {
     })
     
     output$table <- DT::renderDataTable({
-        forecast()
+        forecast <- forecast()
+        forecast <- forecast %>%
+            select(ds, y, yhat) %>%
+            arrange(-row_number()) %>%
+            rename(Date = ds,
+                   Actual = y,
+                   Forecast = yhat)
+        
+        DT::datatable(
+            forecast,
+            extensions = "Buttons",
+            options = list(
+                dom = "Bfrtip",
+                buttons = c("csv", "excel", "pdf")
+            )
+        )
     })
-    
 })
 
 import_data <- function() {
-    path <- "data\\alcohol_sales.csv"
+    path <- "data/alcohol_sales.csv"
     
     df <- read.csv(path,
                    na.strings = c("null", ".", ""))
@@ -71,7 +85,7 @@ get_forecast <- function(pred_date, end_date) {
         full_join(pred,
                   by = "ds")
     
-    forecast <- forecast[forecast$ds >= end_date, ]
+    forecast <- forecast[forecast$ds >= end_date,]
     
     return(forecast)
 }
@@ -81,7 +95,7 @@ get_figure <- function(forecast) {
         forecast,
         x = ~ ds,
         y = ~ y,
-        name = "Price",
+        name = "Actual",
         type = "scatter",
         mode = "lines",
         line = list(color = "rgba(49,130,189,1)")
@@ -112,11 +126,8 @@ get_figure <- function(forecast) {
     
     fig <- fig %>%
         layout(
-            #title = "Alcohol sales forecast",
-            xaxis = list(type = "date",
-                         title = "Date"),
-            yaxis = list(type = "linear",
-                         title = "Sale"),
+            xaxis = list(title = "Date"),
+            yaxis = list(title = "Sale"),
             legend = list(x = 0.01, y = 1.01)
         )
     
