@@ -1,7 +1,3 @@
-library(shiny)
-library(plotly)
-library(DT)
-
 shinyUI(fluidPage(
   titlePanel("Forecasting Alcohol Sales"),
   sidebarLayout(
@@ -24,6 +20,6 @@ shinyUI(fluidPage(
       )
     ),
     mainPanel(plotlyOutput("plot"),
-              DT::dataTableOutput("table"))
+              dataTableOutput("table"))
   )
 ))
