@@ -35,9 +35,9 @@ get_figure <- function(forecast) {
   fig <- fig %>%
     layout(
       xaxis = list(title = "Date"),
-      yaxis = list(title = "Sale"),
-      legend = list(x = 0.01,
-                    y = 1.01)
+      yaxis = list(title = "Sale")#,
+      #legend = list(x = 0.01,
+      #              y = 1.01)
     )
   
   return(fig)
