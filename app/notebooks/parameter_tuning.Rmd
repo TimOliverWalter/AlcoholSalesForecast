@@ -3,7 +3,7 @@ title: "Hyperparameter tuning"
 output: html_notebook
 ---
 
-```{r}
+```{r warning=FALSE, echo=FALSE, message=FALSE}
 library(prophet)
 library(plotly)
 library(dplyr)
@@ -52,7 +52,7 @@ rand_search_grid <- rand_search_grid %>% expand(
 rand_search_grid
 ```
 
-```{r}
+```{r echo=FALSE, message=FALSE, results='hide'}
 tuning_result <- rand_search_grid
 cutoffs <-  seq.Date(
   from = as.Date("2016-11-01"),

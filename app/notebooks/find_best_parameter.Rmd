@@ -3,7 +3,7 @@ title: "Find best hyperparameter"
 output: html_notebook
 ---
 
-```{r}
+```{r warning=FALSE, echo=FALSE, message=FALSE}
 library(dplyr)
 library(prophet)
 library(plotly)
@@ -35,7 +35,8 @@ split_date <- "2017-12-01"
 train <- df[df$ds <= split_date,]
 test <- df[df$ds > split_date,]
 
-test
+print(paste0("Number of Train Rows ",nrow(train)))
+print(paste0("Number of Test Rows ",nrow(test)))
 ```
 
 ```{r}
@@ -82,26 +83,17 @@ forecast <- df %>%
 tail(forecast)
 ```
 
-```{r}
+
+```{r warning=FALSE, message=FALSE, fig.show='hide'}
 fig <- plot_ly(
-  forecast,
-  x = ~ ds,
-  y = ~ y,
-  name = "Actual",
-  type = "scatter",
-  mode = "lines",
-  line = list(color = "rgba(49,130,189,1)")
+  x = forecast$ds,
+  y = forecast$y-forecast$yhat,
+  name = "Error",
+  type = "bar"
 )
-fig <- fig %>%
-  add_trace(
-    y = ~ yhat,
-    name = "Forecast",
-    line = list(color = "rgba(230,0,0,1)")
-  )
 
 fig <- fig %>%
   layout(
-    title = "Alcohol sales forecast form Jan 2018 to Jan 2019",
     xaxis = list(title = "Date"),
     yaxis = list(title = "Sale")
   )

@@ -3,15 +3,18 @@ body <- function(){
     fluidRow(
       box(
         width = 12,
-        plotlyOutput("plot")
+        
+        plotlyOutput("plot") %>%
+          withSpinner()
       )
     ),
     br(),
     fluidRow(
       box(
         width = 12,
-        dataTableOutput("table")
+        dataTableOutput("table") %>%
+          withSpinner()
       )
     )
-  )
+  ) 
 }

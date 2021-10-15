@@ -1,9 +1,9 @@
 ---
-title: "Statistics"
+title: "Exploratory Data Analysis"
 output: html_notebook
 ---
 
-```{r}
+```{r warning=FALSE, echo=FALSE, message=FALSE}
 library(plotly)
 library(dplyr)
 library(xts)
@@ -36,6 +36,7 @@ if (length(missing_values) == 0) {
 ```
 
 ```{r}
+
 rsd <- rollapply(df$Sale,
                  width = 12,
                  FUN = sd,
@@ -45,9 +46,7 @@ rmean <- rollapply(df$Sale,
                    width = 12,
                    FUN = mean,
                    fill = NA)
-```
 
-```{r}
 fig <- plot_ly(
   df,
   x = ~ Date,
@@ -60,14 +59,21 @@ fig <- plot_ly(
 fig <- fig %>%
   add_trace(
     y = rmean,
-    name = "Rolling Mean",
+    name = "Moving Average",
     line = list(color = "rgba(230,0,0,1)")
   )
 fig <- fig %>%
   add_trace(
-    y = rsd,
-    name = "Rolling Variance",
+    y = rmean + rsd,
+    name = "Moving Average + 1 Std",
     line = list(color = "rgba(0,230,0,1)")
+  )
+
+fig <- fig %>%
+  add_trace(
+    y = rmean - rsd,
+    name = "Moving Average - 1 Std",
+    line = list(color = "rgba(100,30,230,1)")
   )
 
 fig <- fig %>%
@@ -91,6 +97,14 @@ if (adft$p.value <= 0.05) {
   print("Do not reject null hypothesis, data is not stationary")
   print(paste("p-value:", adft$p.value))
 }
+```
+
+```{r}
+acf(ts, main="")
+
+```
+```{r}
+pacf(ts, main="")
 ```
 
 
