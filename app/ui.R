@@ -1,8 +1,8 @@
 shinyUI(
   dashboardPage(
     skin = "black",
-    header(),
-    sidebar(),
-    body()
+    header=header(),
+    sidebar=sidebar(),
+    body=body()
   )
 )

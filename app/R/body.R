@@ -3,7 +3,6 @@ body <- function(){
     fluidRow(
       box(
         width = 12,
-        
         plotlyOutput("plot") %>%
           withSpinner()
       )

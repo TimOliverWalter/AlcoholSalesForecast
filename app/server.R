@@ -9,11 +9,11 @@ shinyServer(function(input, output) {
         get_figure(forecast = forecast())
     })
     
-    output$table <- renderDataTable({
+    output$table <- DT::renderDataTable({
         forecast <- forecast()
         forecast <- rename_fcst(forecast=forecast)
         
-        datatable(
+        DT::datatable(
             forecast,
             extensions = "Buttons",
             options = list(
